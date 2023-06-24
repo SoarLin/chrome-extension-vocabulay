@@ -1,0 +1,11 @@
+@mixin vertical-list {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+@mixin flex($jc: center, $ai: center) {
+  display: flex;
+  justify-content: $jc;
+  align-items: $ai;
+}

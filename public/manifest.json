@@ -1,0 +1,16 @@
+{
+  "name": "My Vocabulary",
+  "description": "Put new words into My Vocabulary to expand the number of words",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "index.html",
+    "default_icon": "images/dictionary.png"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
