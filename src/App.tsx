@@ -3,12 +3,10 @@ import AddVocabulary from './components/AddVocabulary'
 import Dictionary from './components/Dictionary'
 import styled from 'styled-components'
 
-
 const App: React.FC = () => {
   const Wrapper = styled.section`
     align-self: flex-start;
   `;
-
 
   return (
     <div className="wrapper">
