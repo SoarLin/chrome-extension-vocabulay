@@ -35,7 +35,7 @@ const Dictionary: React.FC = () => {
   }, [])
 
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
+    <Paper sx={{ width: '100%', overflow: 'hidden', marginTop: '10px' }}>
       <TableContainer sx={{ maxHeight: 300 }}>
         <Table stickyHeader aria-label="sticky table" sx={{ minWidth: 650 }} size="small">
           <TableHead>

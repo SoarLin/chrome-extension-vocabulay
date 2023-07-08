@@ -1,23 +1,41 @@
 import React from 'react';
-import AddIcon from '@mui/icons-material/Add'
+import SearchIcon from '@mui/icons-material/Search'
+import WarningIcon from '@mui/icons-material/Warning'
 import IconButton from '@mui/material/IconButton'
 import Paper from '@mui/material/Paper'
 import InputBase from '@mui/material/InputBase'
 import Divider from '@mui/material/Divider'
 import Box from '@mui/material/Box'
+import Card from '@mui/material/Card'
 import LinearProgress from '@mui/material/LinearProgress'
+import FormHelperText from '@mui/material/FormHelperText'
 
 import { lookUpWord } from '../apis/dictionary'
 import { AsyncState } from '../types';
 
 const AddVocabulary: React.FC = () => {
   const [word, setWord] = React.useState('')
-  const [state, setState] = React.useState<AsyncState>(null)
-  const [explan, setExplan] = React.useState('')
-  const [sentence, setSentence] = React.useState('')
+  const [state, setState] = React.useState<AsyncState>('complete')
+  const [errMsg, setErrMsg] = React.useState('')
+  const [explan, setExplan] = React.useState('本能；直覺')
+  const [sentence, setSentence] = React.useState(`The mother's instinct told her that something was wrong with her child. (母親的本能告訴她，孩子有些問題。)`)
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setWord(event.target.value)
+  }
+
+  const errorHandle = (errorMessage: string, throwError = false) => {
+    setState('error')
+    setErrMsg(errorMessage)
+    if (throwError) {
+      throw new Error(errorMessage)
+    }
+    return
+  }
+
+  const hasFind = (content: string) => {
+    const regex = /"explan":.*(?="sentence":)/
+    return regex.test(content)
   }
 
   const extractContent = (content: string) => {
@@ -40,16 +58,17 @@ const AddVocabulary: React.FC = () => {
     try {
       const result = await lookUpWord(word)
       if (!result.choices || !result.usage) {
-        throw new Error('Invalid AI response');
+        errorHandle('Invalid AI response', true)
       }
-      setState('complete')
       answer = result.choices[0].message?.content
-      if (!answer) return
     } catch (err) {
-      setState('error')
-      throw new Error('OpenAI occur errors')
+      errorHandle('OpenAI occur errors', true)
     }
 
+    if (!answer) return errorHandle('No return content')
+    if (!hasFind(answer)) return errorHandle(answer)
+
+    setState('complete')
     try {
       const content = JSON.parse(answer)
       if ('explan' in content) setExplan(content.explan)
@@ -60,10 +79,10 @@ const AddVocabulary: React.FC = () => {
   }
 
   return (
-    <>
+    <div>
       <Paper
         component="form"
-        sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 400, marginBottom: '10px' }}
+        sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 400 }}
       >
         <InputBase
           sx={{ ml: 1, flex: 1 }}
@@ -81,21 +100,22 @@ const AddVocabulary: React.FC = () => {
           size="small"
           onClick={handleClickAdd}
         >
-          <AddIcon />
+          <SearchIcon />
         </IconButton>
       </Paper>
-      {
-        state === 'loading'
-          ? <Box sx={{ width: '100%' }}><LinearProgress /></Box>
-          : state === 'complete'
-            ?
-            <div>
-              <p>explan: {explan}</p>
-              <p>sentence: {sentence}</p>
-            </div>
-            : null
-      }
-    </>
+      { state === 'loading' && <Box sx={{ width: '100%' }}><LinearProgress /></Box> }
+      { state === 'error' && (
+        <FormHelperText error className="error-hint">
+          <WarningIcon sx={{ fontSize: 16 }} />ERROR! {errMsg}
+        </FormHelperText>
+      )}
+      { state === 'complete' && (
+        <Card sx={{ marginTop: '10px' }}>
+          <p>explan: {explan}</p>
+          <p>sentence: {sentence}</p>
+        </Card>
+      )}
+    </div>
   );
 };
 

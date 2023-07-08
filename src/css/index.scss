@@ -25,3 +25,10 @@ body {
 .wrapper {
   @include vertical-list;
 }
+
+.error-hint {
+  @include flex(flex-start, center);
+  svg {
+    margin-right: 5px;
+  }
+}
