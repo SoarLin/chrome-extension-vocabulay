@@ -1,6 +1,5 @@
 import { db } from '../plugins/firebase'
 import { ref, child, set, get } from 'firebase/database'
-import openai from '../plugins/openai'
 
 import dayjs from 'dayjs'
 import { Vocabulary } from '../types'
@@ -38,15 +37,4 @@ export const readAllWords = async (): Promise<Vocabulary[]> => {
       reject(error)
     })
   })
-}
-
-export const chatCompletion = async () => {
-  const response = await openai.createChatCompletion({
-    model: 'gpt-3.5-turbo',
-    messages: [{ role: 'user', content: 'Hello world' }],
-  })
-  if (response.status >= 200 && response.status < 300) {
-    return response.data
-  }
-  new Error('OpenAI error!')
 }

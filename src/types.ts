@@ -3,3 +3,5 @@ export interface Vocabulary {
   explan: string,
   sentence: string,
 }
+
+export type AsyncState = null | 'loading' | 'error' | 'complete';
