@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from 'firebase/app'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
+// import { getFirestore } from 'firebase/firestore'
 import { getDatabase } from 'firebase/database'
 
 // TODO: Add SDKs for Firebase products that you want to use
@@ -39,5 +39,5 @@ signInWithEmailAndPassword(auth, userEmail, password)
     console.error(errorCode, errorMessage)
   });
 
-export const store = getFirestore(app)
+// export const store = getFirestore(app)
 export const db = getDatabase(app)

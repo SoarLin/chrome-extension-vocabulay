@@ -1,6 +1,8 @@
 import { db } from '../plugins/firebase'
 import { ref, child, set, get } from 'firebase/database'
+import openai from '../plugins/openai'
 
+import dayjs from 'dayjs'
 import { Vocabulary } from '../types'
 
 const ROOT_PATH = 'Dictionary/'
@@ -13,12 +15,21 @@ export const writeWord = (data: Vocabulary) => {
   set(ref(db, ROOT_PATH + data.word), data)
 }
 export const readAllWords = async (): Promise<Vocabulary[]> => {
+  const today = dayjs().format('YYYY-MM-DD')
+  const key = 'Vocabulary_' + today
+  // const todayUnix = dayjs(`${today}T00:00:00.000Z`).unix()
+  // console.log(todayUnix)
+  const cache = localStorage.getItem(key)
+  if (cache) {
+    return JSON.parse(cache)
+  }
+
   return new Promise((resolve, reject) => {
     const dbRef = ref(db)
     get(child(dbRef, ROOT_PATH)).then((snapshot: any) => {
       if (snapshot.exists()) {
-        console.log(snapshot.val())
         const data: Array<Vocabulary> = Object.values(snapshot.val())
+        localStorage.setItem(key, JSON.stringify(data))
         resolve(data)
       } else {
         resolve([])
@@ -27,4 +38,15 @@ export const readAllWords = async (): Promise<Vocabulary[]> => {
       reject(error)
     })
   })
+}
+
+export const chatCompletion = async () => {
+  const response = await openai.createChatCompletion({
+    model: 'gpt-3.5-turbo',
+    messages: [{ role: 'user', content: 'Hello world' }],
+  })
+  if (response.status >= 200 && response.status < 300) {
+    return response.data
+  }
+  new Error('OpenAI error!')
 }

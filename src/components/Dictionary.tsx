@@ -10,6 +10,7 @@ import TablePagination from '@mui/material/TablePagination'
 import { Vocabulary } from '../types'
 import { readAllWords } from '../apis/vocabulary'
 
+
 const Dictionary: React.FC = () => {
   const [dictionary, setDictionary] = React.useState<Vocabulary[]>([])
   const [page, setPage] = React.useState(0)
