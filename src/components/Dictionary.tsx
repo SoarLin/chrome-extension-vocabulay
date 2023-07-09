@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React from 'react'
 import Table from '@mui/material/Table'
 import TableBody from '@mui/material/TableBody'
 import TableCell from '@mui/material/TableCell'
@@ -8,11 +8,12 @@ import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
 import TablePagination from '@mui/material/TablePagination'
 import { Vocabulary } from '../types'
-import { readAllWords } from '../apis/vocabulary'
 
+type Props = {
+  data: Vocabulary[]
+}
 
-const Dictionary: React.FC = () => {
-  const [dictionary, setDictionary] = React.useState<Vocabulary[]>([])
+const Dictionary: React.FC<Props> = ({ data = [] }) => {
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(5)
 
@@ -25,15 +26,6 @@ const Dictionary: React.FC = () => {
     setPage(0)
   }
 
-  useEffect(() => {
-    const getAllData = async () => {
-      const dictionaries = await readAllWords()
-      // const dictionaries: Vocabulary[] = Object.values(data)
-      setDictionary(dictionaries)
-    }
-    getAllData()
-  }, [])
-
   return (
     <Paper sx={{ width: '100%', overflow: 'hidden', marginTop: '10px' }}>
       <TableContainer sx={{ maxHeight: 300 }}>
@@ -41,23 +33,23 @@ const Dictionary: React.FC = () => {
           <TableHead>
             <TableRow>
               <TableCell>Word</TableCell>
-              <TableCell>Explan</TableCell>
+              <TableCell>Meaning</TableCell>
               <TableCell>Sentence</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {dictionary
+            {data
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-              .map((data: Vocabulary, idx: number) => {
+              .map((vocabulary: Vocabulary, idx: number) => {
                 return (
                   <TableRow
                     hover
                     key={`row-${idx}`}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                   >
-                    <TableCell>{data.word}</TableCell>
-                    <TableCell>{data.explan}</TableCell>
-                    <TableCell>{data.sentence}</TableCell>
+                    <TableCell>{vocabulary.word}</TableCell>
+                    <TableCell>{vocabulary.meaning}</TableCell>
+                    <TableCell>{vocabulary.sentence}</TableCell>
                   </TableRow>
                 );
               })}
@@ -68,7 +60,7 @@ const Dictionary: React.FC = () => {
         rowsPerPageOptions={[5, 10, 20]}
         component="div"
         size="small"
-        count={dictionary.length}
+        count={data.length}
         rowsPerPage={rowsPerPage}
         page={page}
         onPageChange={handleChangePage}

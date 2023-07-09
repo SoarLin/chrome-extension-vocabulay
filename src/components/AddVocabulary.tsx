@@ -1,28 +1,27 @@
-import React from 'react';
+import React from 'react'
 import SearchIcon from '@mui/icons-material/Search'
 import WarningIcon from '@mui/icons-material/Warning'
-import IconButton from '@mui/material/IconButton'
-import Paper from '@mui/material/Paper'
-import InputBase from '@mui/material/InputBase'
-import Divider from '@mui/material/Divider'
-import Box from '@mui/material/Box'
-import Card from '@mui/material/Card'
-import LinearProgress from '@mui/material/LinearProgress'
-import FormHelperText from '@mui/material/FormHelperText'
-
+import {
+  Box, Divider,
+  FormHelperText,
+  IconButton, InputBase,
+  LinearProgress, Paper
+} from '@mui/material'
+import LookupForm from './LookupForm'
 import { lookUpWord } from '../apis/dictionary'
+import { writeData } from '../apis/vocabulary'
 import { AsyncState } from '../types';
 
-const AddVocabulary: React.FC = () => {
-  const [word, setWord] = React.useState('')
-  const [state, setState] = React.useState<AsyncState>('complete')
-  const [errMsg, setErrMsg] = React.useState('')
-  const [explan, setExplan] = React.useState('本能；直覺')
-  const [sentence, setSentence] = React.useState(`The mother's instinct told her that something was wrong with her child. (母親的本能告訴她，孩子有些問題。)`)
+type Props = {
+  onUpdateWordBook: () => void
+}
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setWord(event.target.value)
-  }
+const AddVocabulary: React.FC<Props> = ({ onUpdateWordBook }) => {
+  const [word, setWord] = React.useState('')
+  const [state, setState] = React.useState<AsyncState>(null)
+  const [errMsg, setErrMsg] = React.useState('')
+  const [meaning, setMeaning] = React.useState('')
+  const [sentence, setSentence] = React.useState('')
 
   const errorHandle = (errorMessage: string, throwError = false) => {
     setState('error')
@@ -34,16 +33,16 @@ const AddVocabulary: React.FC = () => {
   }
 
   const hasFind = (content: string) => {
-    const regex = /"explan":.*(?="sentence":)/
-    return regex.test(content)
+    const regex = /meaning.*sentence/
+    return regex.test(content.replace(/\n/g,''))
   }
 
   const extractContent = (content: string) => {
-    // 使用正則表達式擷取 'explan' 的內容
-    const explanRegex = /"explan":\s*"(.+?)"/
-    const explanMatch = content.match(explanRegex)
-    const explan = explanMatch ? explanMatch[1] : ''
-    setExplan(explan)
+    // 使用正則表達式擷取 'meaning' 的內容
+    const meaningRegex = /"meaning":\s*"(.+?)"/
+    const meaningMatch = content.match(meaningRegex)
+    const meaning = meaningMatch ? meaningMatch[1] : ''
+    setMeaning(meaning)
 
     // 使用正則表達式擷取 'sentence' 的內容
     const sentenceRegex = /"sentence":\s*"(.+?)"/
@@ -52,7 +51,7 @@ const AddVocabulary: React.FC = () => {
     setSentence(sentence)
   }
 
-  const handleClickAdd = async () => {
+  const handleLookup = async () => {
     setState('loading')
     let answer
     try {
@@ -71,11 +70,25 @@ const AddVocabulary: React.FC = () => {
     setState('complete')
     try {
       const content = JSON.parse(answer)
-      if ('explan' in content) setExplan(content.explan)
+      if ('meaning' in content) setMeaning(content.meaning)
       if ('sentence' in content) setSentence(content.sentence)
     } catch {
       extractContent(answer)
     }
+  }
+
+  const resetForm = () => {
+    setWord('')
+    setErrMsg('')
+    setMeaning('')
+    setSentence('')
+    setState(null)
+  }
+
+  const handleAddToBook = () => {
+    writeData(word, meaning, sentence)
+    resetForm()
+    onUpdateWordBook()
   }
 
   return (
@@ -90,7 +103,7 @@ const AddVocabulary: React.FC = () => {
           placeholder="New Vocabulary"
           inputProps={{ 'aria-label': 'new vocabulary' }}
           value={word}
-          onChange={handleInputChange}
+          onChange={ (event) => setWord(event.target.value) }
         />
         <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
         <IconButton
@@ -98,7 +111,7 @@ const AddVocabulary: React.FC = () => {
           sx={{ p: '5px' }}
           aria-label="add"
           size="small"
-          onClick={handleClickAdd}
+          onClick={handleLookup}
         >
           <SearchIcon />
         </IconButton>
@@ -110,13 +123,17 @@ const AddVocabulary: React.FC = () => {
         </FormHelperText>
       )}
       { state === 'complete' && (
-        <Card sx={{ marginTop: '10px' }}>
-          <p>explan: {explan}</p>
-          <p>sentence: {sentence}</p>
-        </Card>
+        <LookupForm
+          meaning={meaning}
+          sentence={sentence}
+          onMeaningChange={ (event) => setMeaning(event.target.value) }
+          onSentenceChange={ (event) => setSentence(event.target.value) }
+          onHandleGiveUp={resetForm}
+          onHandleAddToBook={handleAddToBook}
+        />
       )}
     </div>
   );
 };
 
-export default AddVocabulary;
+export default AddVocabulary
