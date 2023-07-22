@@ -13,10 +13,11 @@ import { writeData } from '../apis/vocabulary'
 import { AsyncState } from '../types';
 
 type Props = {
-  onUpdateWordBook: () => void
+  onUpdateWordBook: () => void,
+  onInputChange: (_word: string) => void,
 }
 
-const AddVocabulary: React.FC<Props> = ({ onUpdateWordBook }) => {
+const AddVocabulary: React.FC<Props> = ({ onUpdateWordBook, onInputChange }) => {
   const [word, setWord] = React.useState('')
   const [state, setState] = React.useState<AsyncState>(null)
   const [errMsg, setErrMsg] = React.useState('')
@@ -85,6 +86,12 @@ const AddVocabulary: React.FC<Props> = ({ onUpdateWordBook }) => {
     setState(null)
   }
 
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const type = event.target.value
+    onInputChange(type)
+    setWord(type)
+  }
+
   const handleAddToBook = () => {
     writeData(word, meaning, sentence)
     resetForm()
@@ -103,7 +110,7 @@ const AddVocabulary: React.FC<Props> = ({ onUpdateWordBook }) => {
           placeholder="New Vocabulary"
           inputProps={{ 'aria-label': 'new vocabulary' }}
           value={word}
-          onChange={ (event) => setWord(event.target.value) }
+          onChange={ handleInputChange }
         />
         <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
         <IconButton
