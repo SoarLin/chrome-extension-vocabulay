@@ -10,7 +10,7 @@ import { readAllWords } from './apis/vocabulary'
 
 const useStyles = makeStyles(() => ({
   wrapper: {
-    minHeight: '500px',
+    minHeight: '350px',
     width: '100%',
   }
 }));
