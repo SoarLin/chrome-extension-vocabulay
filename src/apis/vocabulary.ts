@@ -1,5 +1,5 @@
 import { db } from '../plugins/firebase'
-import { ref, push, set, onValue, query, orderByChild } from 'firebase/database'
+import { ref, push, set, update, onValue, query, orderByChild } from 'firebase/database'
 
 import { Vocabulary } from '../types'
 
@@ -16,14 +16,27 @@ export const writeData = (word: string, meaning: string, sentence: string) => {
 export const writeWord = (data: Vocabulary) => {
   set(ref(db, ROOT_PATH + data.word), data)
 }
+export const updateData = (data: Vocabulary) => {
+  const key = data.key
+  if (!key) return
+
+  data.key = undefined
+  delete data.key
+
+  return update(ref(db, ROOT_PATH + '/' + key), data);
+}
+
 export const readAllWords = async (): Promise<Vocabulary[]> => {
   return new Promise((resolve, reject) => {
     const dbRef = query(ref(db, ROOT_PATH), orderByChild('timestamp'))
     onValue(dbRef,
       (snapshot) => {
-        const records: Array<Vocabulary> = []
-        const data: Array<Vocabulary> = Object.values(snapshot.val())
-        data.forEach(item => { records.unshift(item) })
+        const records: Array<Vocabulary> =
+          Object.entries<Vocabulary>(snapshot.val())
+            .reduce((acc: Vocabulary[], val) => {
+              acc.unshift({ key: val[0], ...val[1]})
+              return acc
+            }, [])
         resolve(records)
       },
       (error) => {

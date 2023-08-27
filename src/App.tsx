@@ -7,7 +7,6 @@ import dayjs from 'dayjs'
 import { Vocabulary } from './types'
 import { readAllWords } from './apis/vocabulary'
 
-
 const useStyles = makeStyles(() => ({
   wrapper: {
     minHeight: '350px',
@@ -19,6 +18,7 @@ const App: React.FC = () => {
   const classes = useStyles();
   const [dictionary, setDictionary] = React.useState<Vocabulary[]>([])
   const [filterData, setFilterData] = React.useState<Vocabulary[]>([])
+  const [editVocabulary, setEditVocabulary] = React.useState<Vocabulary>()
   const today = dayjs().format('YYYY-MM-DD')
   const key = 'Vocabulary_' + today
 
@@ -41,6 +41,10 @@ const App: React.FC = () => {
     setFilterData(filterDictionary)
   }
 
+  const editRowData = (value: Vocabulary) => {
+    setEditVocabulary(value)
+  }
+
   useEffect(() => {
     const cache = localStorage.getItem(key)
     if (cache) {
@@ -54,8 +58,12 @@ const App: React.FC = () => {
 
   return (
     <div className={classes.wrapper}>
-      <AddVocabulary onInputChange={filterWordBook} onUpdateWordBook={ updateWordBook } />
-      <Dictionary data={filterData} />
+      <AddVocabulary
+        editVocabulary={editVocabulary}
+        onInputChange={filterWordBook}
+        onUpdateWordBook={updateWordBook}
+      />
+      <Dictionary data={filterData} onEditRow={editRowData} />
     </div>
   );
 }

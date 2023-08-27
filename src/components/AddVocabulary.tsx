@@ -1,23 +1,58 @@
-import React from 'react'
-import SearchIcon from '@mui/icons-material/Search'
-import WarningIcon from '@mui/icons-material/Warning'
+import React, { useEffect } from 'react'
+import { makeStyles } from '@mui/styles'
+import { styled } from '@mui/material/styles'
 import {
-  Box, Divider,
-  FormHelperText,
+  AutoFixHigh as AutoFixHighIcon,
+  Create as CreateIcon,
+  Warning as WarningIcon
+} from '@mui/icons-material'
+import {
+  Box, Button, Container,
+  Divider, FormHelperText,
   IconButton, InputBase,
   LinearProgress, Paper
 } from '@mui/material'
-import LookupForm from './LookupForm'
+import { ButtonProps } from '@mui/material/Button'
+import ExampleEditForm from './ExampleEditForm'
 import { lookUpWord } from '../apis/dictionary'
-import { writeData } from '../apis/vocabulary'
-import { AsyncState } from '../types';
+import { writeData, updateData } from '../apis/vocabulary'
+import { AsyncState, LookupMode, Vocabulary } from '../types';
 
 type Props = {
+  editVocabulary?: Vocabulary,
   onUpdateWordBook: () => void,
   onInputChange: (_word: string) => void,
 }
 
-const AddVocabulary: React.FC<Props> = ({ onUpdateWordBook, onInputChange }) => {
+const useStyles = makeStyles(() => ({
+  container: {
+    paddingLeft: '0 !important',
+    paddingRight: '0 !important',
+  },
+  searchBlock: {
+    display: 'flex',
+    justifyContent: 'flex-start',
+    gap: 10,
+  },
+}))
+
+const WhiteButton = styled(Button)<ButtonProps>(() => ({
+  color: '#1976d2',
+  backgroundColor: '#FFFFFF',
+  '&:hover': {
+    backgroundColor: '#FFFFFF',
+  },
+  padding: '6px',
+  minWidth: '44px',
+}))
+
+const AddVocabulary: React.FC<Props> = ({
+  editVocabulary,
+  onUpdateWordBook,
+  onInputChange
+}) => {
+  const classes = useStyles();
+  const [mode, setMode] = React.useState<LookupMode>(null)
   const [word, setWord] = React.useState('')
   const [state, setState] = React.useState<AsyncState>(null)
   const [errMsg, setErrMsg] = React.useState('')
@@ -36,6 +71,10 @@ const AddVocabulary: React.FC<Props> = ({ onUpdateWordBook, onInputChange }) => 
   const hasFind = (content: string) => {
     const regex = /meaning.*sentence/
     return regex.test(content.replace(/\n/g,''))
+  }
+
+  const isEditMode = () => {
+    return mode === 'Manual' || mode === 'EditRow'
   }
 
   const extractContent = (content: string) => {
@@ -80,10 +119,12 @@ const AddVocabulary: React.FC<Props> = ({ onUpdateWordBook, onInputChange }) => 
 
   const resetForm = () => {
     setWord('')
+    onInputChange('')
     setErrMsg('')
     setMeaning('')
     setSentence('')
     setState(null)
+    setMode(null)
   }
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,48 +139,81 @@ const AddVocabulary: React.FC<Props> = ({ onUpdateWordBook, onInputChange }) => 
     onUpdateWordBook()
   }
 
+  const handleUpdateData = async (data: Vocabulary) => {
+    const updated = {
+      ...editVocabulary,
+      word: data.word,
+      meaning: data.meaning,
+      sentence: data.sentence
+    }
+    await updateData(updated)
+    resetForm()
+    onUpdateWordBook()
+  }
+
+  useEffect(() => {
+    if (editVocabulary) {
+      console.log('edit vocabulary', editVocabulary)
+      setWord(editVocabulary.word)
+      setMeaning(editVocabulary.meaning)
+      setSentence(editVocabulary.sentence)
+      setMode('EditRow')
+    }
+  }, [editVocabulary])
+
   return (
-    <div>
-      <Paper
-        component="form"
-        sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 400 }}
-      >
-        <InputBase
-          sx={{ ml: 1, flex: 1 }}
-          size="small"
-          placeholder="New Vocabulary"
-          inputProps={{ 'aria-label': 'new vocabulary' }}
-          value={word}
-          onChange={ handleInputChange }
-        />
-        <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
-        <IconButton
-          color="primary"
-          sx={{ p: '5px' }}
-          aria-label="add"
-          size="small"
-          onClick={handleLookup}
-        >
-          <SearchIcon />
-        </IconButton>
-      </Paper>
+    <Container className={classes.container}>
+      { isEditMode() ? null :
+        <div className={classes.searchBlock}>
+          <Paper
+            component="form"
+            sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: 400 }}
+          >
+            <InputBase
+              sx={{ ml: 1, flex: 1 }}
+              size="small"
+              placeholder="New Vocabulary"
+              inputProps={{ 'aria-label': 'new vocabulary' }}
+              value={word}
+              onChange={ handleInputChange }
+            />
+            <Divider sx={{ height: 28, m: 0.5 }} orientation="vertical" />
+            <IconButton
+              color="primary"
+              sx={{ p: '5px' }}
+              aria-label="add"
+              size="small"
+              onClick={handleLookup}
+            >
+              <AutoFixHighIcon />
+            </IconButton>
+          </Paper>
+          <WhiteButton variant="contained" onClick={ () => setMode('Manual')}>
+            <CreateIcon />
+          </WhiteButton>
+        </div>
+      }
       { state === 'loading' && <Box sx={{ width: '100%' }}><LinearProgress /></Box> }
       { state === 'error' && (
         <FormHelperText error className="error-hint">
           <WarningIcon sx={{ fontSize: 16 }} />ERROR! {errMsg}
         </FormHelperText>
       )}
-      { state === 'complete' && (
-        <LookupForm
+      { (state === 'complete' || isEditMode()) && (
+        <ExampleEditForm
+          mode={mode}
+          word={word}
           meaning={meaning}
           sentence={sentence}
+          onWordingChange={ (event) => setWord(event.target.value) }
           onMeaningChange={ (event) => setMeaning(event.target.value) }
           onSentenceChange={ (event) => setSentence(event.target.value) }
           onHandleGiveUp={resetForm}
           onHandleAddToBook={handleAddToBook}
+          onHandleUpdate={handleUpdateData}
         />
       )}
-    </div>
+    </Container>
   );
 };
 

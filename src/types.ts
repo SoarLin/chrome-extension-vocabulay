@@ -1,4 +1,5 @@
 export interface Vocabulary {
+  key?: string,
   word: string,
   meaning: string,
   sentence: string,
@@ -6,3 +7,5 @@ export interface Vocabulary {
 }
 
 export type AsyncState = null | 'loading' | 'error' | 'complete';
+
+export type LookupMode = null | 'OpenAI' | 'Manual' | 'EditRow'

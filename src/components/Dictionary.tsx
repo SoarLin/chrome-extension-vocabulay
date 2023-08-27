@@ -1,19 +1,22 @@
 import React from 'react'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
-import TableRow from '@mui/material/TableRow'
-import Paper from '@mui/material/Paper'
-import TablePagination from '@mui/material/TablePagination'
+import {
+  Paper, Table,
+  TableBody, TableCell, TableHead,
+  TableContainer, TableRow,
+  TablePagination
+} from '@mui/material'
+
 import { Vocabulary } from '../types'
 
 type Props = {
-  data: Vocabulary[]
+  data: Vocabulary[],
+  onEditRow: (_value: Vocabulary) => void,
 }
 
-const Dictionary: React.FC<Props> = ({ data = [] }) => {
+const Dictionary: React.FC<Props> = ({
+  data = [],
+  onEditRow
+}) => {
   const [page, setPage] = React.useState(0)
   const [rowsPerPage, setRowsPerPage] = React.useState(5)
 
@@ -44,8 +47,9 @@ const Dictionary: React.FC<Props> = ({ data = [] }) => {
                 return (
                   <TableRow
                     hover
-                    key={`row-${idx}`}
+                    key={vocabulary.key ? vocabulary.key : `row-${idx}`}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+                    onClick={ () => onEditRow(vocabulary) }
                   >
                     <TableCell>{vocabulary.word}</TableCell>
                     <TableCell>{vocabulary.meaning}</TableCell>
