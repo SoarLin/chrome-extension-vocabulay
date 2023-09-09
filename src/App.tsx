@@ -6,6 +6,7 @@ import Dictionary from './components/Dictionary'
 import dayjs from 'dayjs'
 import { Vocabulary } from './types'
 import { readAllWords } from './apis/vocabulary'
+import { CACHE_PREFIX, MILLSECOND_OF_DAY, NORMAL_DATE_FORMAT } from './constant'
 
 const useStyles = makeStyles(() => ({
   wrapper: {
@@ -19,8 +20,19 @@ const App: React.FC = () => {
   const [dictionary, setDictionary] = React.useState<Vocabulary[]>([])
   const [filterData, setFilterData] = React.useState<Vocabulary[]>([])
   const [editVocabulary, setEditVocabulary] = React.useState<Vocabulary>()
-  const today = dayjs().format('YYYY-MM-DD')
-  const key = 'Vocabulary_' + today
+  const today = dayjs().format(NORMAL_DATE_FORMAT)
+  const key = CACHE_PREFIX + today
+
+  const cleanOldCache = (range = 30) => {
+    const today = new Date();
+    for (let i = range; i > 0; i--) {
+      const pastDate = new Date(today.getTime() - i * MILLSECOND_OF_DAY);
+      const pastKey = CACHE_PREFIX + dayjs(pastDate).format(NORMAL_DATE_FORMAT)
+      if (localStorage.getItem(pastKey)) {
+        localStorage.removeItem(pastKey)
+      }
+    }
+  }
 
   const getAllData = useCallback(async () => {
     const dictionaries = await readAllWords()
@@ -44,6 +56,10 @@ const App: React.FC = () => {
   const editRowData = (value: Vocabulary) => {
     setEditVocabulary(value)
   }
+
+  useEffect(() => {
+    cleanOldCache();
+  }, [])
 
   useEffect(() => {
     const cache = localStorage.getItem(key)
