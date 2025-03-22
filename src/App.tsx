@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react'
+import React, { FC, useCallback, useEffect } from 'react'
 import { makeStyles } from '@mui/styles'
 import AddVocabulary from './components/AddVocabulary'
 import Dictionary from './components/Dictionary'
@@ -15,7 +15,7 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const App: React.FC = () => {
+const App: FC = () => {
   const classes = useStyles();
   const [dictionary, setDictionary] = React.useState<Vocabulary[]>([])
   const [filterData, setFilterData] = React.useState<Vocabulary[]>([])
