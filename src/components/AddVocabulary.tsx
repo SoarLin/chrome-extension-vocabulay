@@ -15,7 +15,7 @@ import {
 import { ButtonProps } from '@mui/material/Button'
 import ExampleEditForm from './ExampleEditForm'
 import { lookUpWord } from '../apis/dictionary'
-import { writeData, updateData } from '../apis/vocabulary'
+import { writeWord, updateWord } from '../apis/vocabulary'
 import { AsyncState, LookupMode, Vocabulary } from '../types';
 
 type Props = {
@@ -134,19 +134,21 @@ const AddVocabulary: React.FC<Props> = ({
   }
 
   const handleAddToBook = () => {
-    writeData(word, meaning, sentence)
+    writeWord(word, meaning, sentence)
     resetForm()
     onUpdateWordBook()
   }
 
   const handleUpdateData = async (data: Vocabulary) => {
-    const updated = {
+    const updated: Vocabulary = {
       ...editVocabulary,
       word: data.word,
       meaning: data.meaning,
-      sentence: data.sentence
+      sentence: data.sentence,
+      id: editVocabulary?.id || '',
+      timestamp: editVocabulary?.timestamp || Date.now()
     }
-    await updateData(updated)
+    await updateWord(updated)
     resetForm()
     onUpdateWordBook()
   }

@@ -1,12 +1,13 @@
-import React, { FC, useCallback, useEffect } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { makeStyles } from '@mui/styles'
 import AddVocabulary from './components/AddVocabulary'
 import Dictionary from './components/Dictionary'
+import ImportExport from './components/ImportExport'
 
-import dayjs from 'dayjs'
+import { storage } from './shared/storage'
 import { Vocabulary } from './types'
 import { readAllWords } from './apis/vocabulary'
-import { CACHE_PREFIX, MILLSECOND_OF_DAY, NORMAL_DATE_FORMAT } from './constant'
+import { STORAGE_KEY } from './constant'
 
 const useStyles = makeStyles(() => ({
   wrapper: {
@@ -15,34 +16,19 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const App: FC = () => {
+const App: React.FC = () => {
   const classes = useStyles();
-  const [dictionary, setDictionary] = React.useState<Vocabulary[]>([])
-  const [filterData, setFilterData] = React.useState<Vocabulary[]>([])
-  const [editVocabulary, setEditVocabulary] = React.useState<Vocabulary>()
-  const today = dayjs().format(NORMAL_DATE_FORMAT)
-  const key = CACHE_PREFIX + today
-
-  const cleanOldCache = (range = 30) => {
-    const today = new Date();
-    for (let i = range; i > 0; i--) {
-      const pastDate = new Date(today.getTime() - i * MILLSECOND_OF_DAY);
-      const pastKey = CACHE_PREFIX + dayjs(pastDate).format(NORMAL_DATE_FORMAT)
-      if (localStorage.getItem(pastKey)) {
-        localStorage.removeItem(pastKey)
-      }
-    }
-  }
+  const [dictionary, setDictionary] = useState<Vocabulary[]>([])
+  const [filterData, setFilterData] = useState<Vocabulary[]>([])
+  const [editVocabulary, setEditVocabulary] = useState<Vocabulary>()
 
   const getAllData = useCallback(async () => {
     const dictionaries = await readAllWords()
-    localStorage.setItem(key, JSON.stringify(dictionaries))
     setDictionary(dictionaries)
     setFilterData(dictionaries)
-  }, [key])
+  }, [])
 
   const updateWordBook = () => {
-    localStorage.removeItem(key)
     getAllData()
   }
 
@@ -57,23 +43,32 @@ const App: FC = () => {
     setEditVocabulary(value)
   }
 
-  useEffect(() => {
-    cleanOldCache();
-  }, [])
+  const handleImport = async (importedData: Vocabulary[]) => {
+    try {
+      // 使用 storage API 儲存資料
+      await storage.setItem(STORAGE_KEY, importedData)
+      // 更新本地狀態
+      setDictionary(importedData)
+      setFilterData(importedData)
+
+      // 可以選擇是否同步到後端資料庫
+      // 這裡需要實現一個函數來批量更新單字到資料庫
+      // 例如: saveAllWords(importedData).then(() => alert('匯入成功且已同步到資料庫'))
+
+      alert('單字表已成功匯入');
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('匯入失敗，請確認檔案格式是否正確');
+    }
+  }
 
   useEffect(() => {
-    const cache = localStorage.getItem(key)
-    if (cache) {
-      const dataFromCache = JSON.parse(cache)
-      setDictionary(dataFromCache)
-      setFilterData(dataFromCache)
-    } else {
-      getAllData()
-    }
-  }, [key, getAllData])
+    getAllData()
+  }, [getAllData])
 
   return (
     <div className={classes.wrapper}>
+      <ImportExport data={dictionary} onImport={handleImport} />
       <AddVocabulary
         editVocabulary={editVocabulary}
         onInputChange={filterWordBook}

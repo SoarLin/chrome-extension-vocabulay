@@ -37,7 +37,9 @@ const ExampleEditForm: React.FC<Props> = ({
   const updateExample = () => {
     if (word && word !== '') {
       const vocabulary: Vocabulary = {
-        word, meaning, sentence
+        id: '',
+        timestamp: new Date().getTime(),
+        word, meaning, sentence,
       }
       onHandleUpdate(vocabulary)
     }

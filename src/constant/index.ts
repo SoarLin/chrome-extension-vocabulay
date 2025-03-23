@@ -1,3 +1,3 @@
-export const CACHE_PREFIX = 'Vocabulary_'
+export const STORAGE_KEY = 'vocabulary'
 export const NORMAL_DATE_FORMAT = 'YYYY-MM-DD'
-export const MILLSECOND_OF_DAY = 24 * 60 * 60 * 1000
+export const MILLISECOND_OF_DAY = 24 * 60 * 60 * 1000

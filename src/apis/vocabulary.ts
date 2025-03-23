@@ -1,47 +1,43 @@
-import { db } from '../plugins/firebase'
-import { ref, push, set, update, onValue, query, orderByChild } from 'firebase/database'
+import { STORAGE_KEY } from '../constant';
+import { storage } from '../shared/storage'
+import { Vocabulary } from '../types';
 
-import { Vocabulary } from '../types'
-
-const ROOT_PATH = 'Dictionary/'
-
-export const writeData = (word: string, meaning: string, sentence: string) => {
-  const vocabulary: Vocabulary = {
-    word, meaning, sentence,
-    timestamp: (new Date()).getTime()
-  }
-  const newWordRef = push(ref(db, ROOT_PATH))
-  set(newWordRef, vocabulary)
-}
-export const writeWord = (data: Vocabulary) => {
-  set(ref(db, ROOT_PATH + data.word), data)
-}
-export const updateData = (data: Vocabulary) => {
-  const key = data.key
-  if (!key) return
-
-  data.key = undefined
-  delete data.key
-
-  return update(ref(db, ROOT_PATH + '/' + key), data);
-}
-
+// 讀取所有單字
 export const readAllWords = async (): Promise<Vocabulary[]> => {
-  return new Promise((resolve, reject) => {
-    const dbRef = query(ref(db, ROOT_PATH), orderByChild('timestamp'))
-    onValue(dbRef,
-      (snapshot) => {
-        const records: Array<Vocabulary> =
-          Object.entries<Vocabulary>(snapshot.val())
-            .reduce((acc: Vocabulary[], val) => {
-              acc.unshift({ key: val[0], ...val[1]})
-              return acc
-            }, [])
-        resolve(records)
-      },
-      (error) => {
-        reject(error)
-      }
-    )
-  })
+  const words = await storage.getItem(STORAGE_KEY)
+  if (!words) return []
+
+  // 確保資料格式相容性
+  return Array.isArray(words)
+    ? words.sort((a, b) => b.timestamp - a.timestamp)
+    : []
+}
+
+// 新增單字
+export const writeWord = async (word: string, meaning: string, sentence: string) => {
+  const vocabulary: Vocabulary = {
+    id: crypto.randomUUID(),
+    word,
+    meaning,
+    sentence,
+    timestamp: Date.now()
+  }
+  const existingWords = await readAllWords()
+  await storage.setItem(STORAGE_KEY, [vocabulary, ...existingWords])
+}
+
+// 更新單字
+export const updateWord = async (data: Vocabulary) => {
+  const words = await readAllWords()
+  const updatedWords = words.map(word =>
+    word.id === data.id ? data : word
+  )
+  await storage.setItem(STORAGE_KEY, updatedWords)
+}
+
+// 刪除單字
+export const deleteWord = async (id: string) => {
+  const words = await readAllWords()
+  const filteredWords = words.filter(word => word.id !== id)
+  await storage.setItem(STORAGE_KEY, filteredWords)
 }

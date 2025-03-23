@@ -47,7 +47,7 @@ const Dictionary: React.FC<Props> = ({
                 return (
                   <TableRow
                     hover
-                    key={vocabulary.key ? vocabulary.key : `row-${idx}`}
+                    key={vocabulary.id ? vocabulary.id : `row-${idx}`}
                     sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
                     onClick={ () => onEditRow(vocabulary) }
                   >
